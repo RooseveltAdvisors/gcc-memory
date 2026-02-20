@@ -1,0 +1,34 @@
+[project]
+name = "gcc-memory"
+version = "0.1.0"
+description = "Git-inspired Contextual Commit memory for AI agents — implementation of arxiv.org/abs/2508.00031"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Jon Roosevelt" },
+]
+dependencies = [
+    "pyyaml>=6.0",
+    "typer>=0.9.0",
+    "websockets>=12.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[project.scripts]
+gcc-memory = "gcc_memory.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gcc_memory"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
