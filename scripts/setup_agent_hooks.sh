@@ -15,12 +15,15 @@ if [ ! -x "$PYTHON_BIN" ]; then
     exit 1
   fi
 fi
-mkdir -p "$(dirname "$CLAUDE_HOOK")" "$(dirname "$CODEX_HOOK")"
+mkdir -p "$(dirname "$CLAUDE_HOOK")"
 install -m 755 "$ROOT/integrations/claude/hook_common.py" "$CLAUDE_HOOK_COMMON"
 install -m 755 "$ROOT/integrations/claude/gcc_memory_sync.py" "$CLAUDE_HOOK"
 install -m 755 "$ROOT/integrations/claude/gcc_memory_stop.py" "$CLAUDE_STOP_HOOK"
 install -m 755 "$ROOT/integrations/claude/gcc_memory_observe.py" "$CLAUDE_OBSERVE_HOOK"
-install -m 755 "$ROOT/integrations/codex/gcc-memory_notify.py" "$CODEX_HOOK"
+if [ -f "$ROOT/integrations/codex/gcc-memory_notify.py" ]; then
+  mkdir -p "$(dirname "$CODEX_HOOK")"
+  install -m 755 "$ROOT/integrations/codex/gcc-memory_notify.py" "$CODEX_HOOK"
+fi
 CLAUDE_CMD="$PYTHON_BIN $CLAUDE_HOOK"
 CLAUDE_STOP_CMD="$PYTHON_BIN $CLAUDE_STOP_HOOK"
 CLAUDE_OBSERVE_CMD="$PYTHON_BIN $CLAUDE_OBSERVE_HOOK"
@@ -114,15 +117,13 @@ register_hook("UserPromptSubmit", os.environ["CLAUDE_OBSERVE_CMD_ENV"])
 settings_path.write_text(json.dumps(data, indent=2) + "\n")
 PY
 
-CODEX_BIN_ENV="$CODEX_BIN" CODEX_HOOK_ENV="$CODEX_HOOK" python3 - <<'PY'
+if [ -f "$HOME/.codex/config.toml" ]; then
+  CODEX_BIN_ENV="$CODEX_BIN" CODEX_HOOK_ENV="$CODEX_HOOK" python3 - <<'PY'
 from pathlib import Path
 import os
 import json
 
 config_path = Path.home() / ".codex" / "config.toml"
-if not config_path.exists():
-    raise SystemExit("Codex config.toml not found")
-
 hook_line = "notify = " + json.dumps([os.environ["CODEX_BIN_ENV"], Path(os.environ["CODEX_HOOK_ENV"]).as_posix()])
 lines = config_path.read_text().splitlines()
 replaced = False
@@ -140,6 +141,10 @@ if not replaced:
         insert_idx = idx + 1
     lines.insert(insert_idx, hook_line)
 config_path.write_text("\n".join(lines) + "\n")
+print("Configured Codex hooks")
 PY
+else
+  echo "Codex not found, skipping Codex hook setup"
+fi
 
-echo "Installed Claude + Codex gcc-memory hooks"
+echo "Installed gcc-memory hooks"
