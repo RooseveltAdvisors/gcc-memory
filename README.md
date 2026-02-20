@@ -185,6 +185,20 @@ The paper's GCC-equipped agents achieved **48% resolution on SWE-Bench-Lite** â€
 
 ---
 
+## Uninstall
+
+```bash
+cd gcc-memory && bash uninstall.sh
+```
+
+This removes all hooks, skill files, and config. Your project `.gcc/` directories are left intact â€” delete them manually if you want to clear memory from a specific project:
+
+```bash
+rm -rf /path/to/project/.gcc
+```
+
+---
+
 ## Contributing
 
 Contributions welcome! This project is actively maintained.
